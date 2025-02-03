@@ -1,18 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 
-public class DiskController : MonoBehaviour
-// TODO
-// - Can the disk always be on top of the player?
-// - Center the disk on the player (with z transformation).
-// - Move any other disk on the player back to their original spot.
-// - If already on the player, remove the z-shift for CheckDragActivation.
-{
-    public bool dragged = false;
-    public bool let_go = false;
+public class DiskController : MonoBehaviour {
+    private bool dragged = false;
+    private bool let_go = false;
+    private bool in_player = false;
     private float offset;
     private float cam_offset;
     private Vector3 initial_position;
@@ -26,10 +18,13 @@ public class DiskController : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Mouse0)) {
             // If the mouse gets pressed, check if the mouse is over the disk.
             this.CheckDragActivation(Input.mousePosition);
+            this.in_player = false;
         }
         else if(Input.GetKeyUp(KeyCode.Mouse0)) {
             // If the mouse gets released, let go of the disk.
-            this.let_go = true;
+            if(this.dragged) {
+                this.let_go = true;
+            }
         }
     }
     void LateUpdate()
@@ -40,12 +35,19 @@ public class DiskController : MonoBehaviour
             this.let_go = false;
             GameObject player = GameObject.Find("player");
             if(this.CheckOnPlayer(player)) {
-                Vector3 player_center = player.transform.GetChild(1).position;
-                player_center.z -= .5f;
-                transform.position = player_center;
+                Vector3 new_position = player.transform.GetChild(1).position;
+                new_position.y -= this.offset;
+                transform.position = new_position;
+                this.in_player = true;
+                PlayerController controller = player.GetComponent<PlayerController>();
+                DiskController occupator = controller.occupied;
+                if(occupator) {
+                    occupator.SendHome();
+                }
+                controller.occupied = this;
             }
             else {
-                transform.position = this.initial_position;
+                this.SendHome();
             }
         }
         else if(this.dragged) {
@@ -63,7 +65,6 @@ public class DiskController : MonoBehaviour
         mousePos = Camera.main.ScreenToWorldPoint(mousePos);
         Transform upperleft = this.gameObject.transform.GetChild(0);
         Transform lowerright = this.gameObject.transform.GetChild(2);
-
         if(
             upperleft.position.x < mousePos.x &&
             upperleft.position.y > mousePos.y &&
@@ -71,6 +72,10 @@ public class DiskController : MonoBehaviour
             lowerright.position.y < mousePos.y
         ) {
             this.dragged = true;
+            if(this.in_player) {
+                GameObject player = GameObject.Find("player");
+                player.GetComponent<PlayerController>().occupied = null;
+            }
         }
     }
     private bool CheckOnPlayer(GameObject player) {
@@ -79,12 +84,16 @@ public class DiskController : MonoBehaviour
         Transform lowerright = player.transform.GetChild(2);
         if(
             upperleft.position.x < this.gameObject.transform.position.x &&
-            upperleft.position.y > this.gameObject.transform.position.y &&
+            upperleft.position.y > this.gameObject.transform.position.y + this.offset &&
             lowerright.position.x > this.gameObject.transform.position.x &&
-            lowerright.position.y < this.gameObject.transform.position.y
+            lowerright.position.y < this.gameObject.transform.position.y + this.offset
         ) {
             return true;
         }
         return false;
+    }
+    public void SendHome() {
+        transform.position = this.initial_position;
+        this.in_player = false;
     }
 }
