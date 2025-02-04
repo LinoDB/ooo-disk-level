@@ -1,16 +1,14 @@
 using UnityEngine;
 
-
 public class DiskController : MonoBehaviour {
     private bool dragged = false;
     private bool let_go = false;
     private bool in_player = false;
-    private float offset;
+    // private float offset;
     private float cam_offset;
     private Vector3 initial_position;
     void Start() {
         Transform center = this.gameObject.transform.GetChild(1);
-        this.offset = center.position.y - this.gameObject.transform.position.y;
         this.cam_offset = this.gameObject.transform.position.z - Camera.main.transform.position.z;
         this.initial_position = this.gameObject.transform.position;
     }
@@ -35,9 +33,7 @@ public class DiskController : MonoBehaviour {
             this.let_go = false;
             GameObject player = GameObject.Find("player");
             if(this.CheckOnPlayer(player)) {
-                Vector3 new_position = player.transform.GetChild(1).position;
-                new_position.y -= this.offset;
-                transform.position = new_position;
+                transform.position = player.transform.GetChild(1).position;
                 this.in_player = true;
                 PlayerController controller = player.GetComponent<PlayerController>();
                 DiskController occupator = controller.occupied;
@@ -54,9 +50,7 @@ public class DiskController : MonoBehaviour {
             // Place the disk where the mouse is.
             Vector3 mousePos = Input.mousePosition;
             mousePos.z = this.cam_offset;
-            mousePos = Camera.main.ScreenToWorldPoint(mousePos);
-            mousePos.y -= this.offset;
-            transform.position = mousePos;
+            transform.position = Camera.main.ScreenToWorldPoint(mousePos);
         }
     }
     private void CheckDragActivation(Vector3 mousePos) {
@@ -84,9 +78,9 @@ public class DiskController : MonoBehaviour {
         Transform lowerright = player.transform.GetChild(2);
         if(
             upperleft.position.x < this.gameObject.transform.position.x &&
-            upperleft.position.y > this.gameObject.transform.position.y + this.offset &&
+            upperleft.position.y > this.gameObject.transform.position.y &&
             lowerright.position.x > this.gameObject.transform.position.x &&
-            lowerright.position.y < this.gameObject.transform.position.y + this.offset
+            lowerright.position.y < this.gameObject.transform.position.y
         ) {
             return true;
         }
