@@ -3,45 +3,62 @@ using UnityEngine;
 public class DiskController : MonoBehaviour {
     private bool dragged = false;
     private bool in_player = false;
+    private bool is_transparent = false;
     private float cam_offset;
-    private Collider2D sink;
-    private Vector3 initial_position;
+    private GameObject player;
     private int layer;
     private void Start() {
         this.cam_offset = this.gameObject.transform.position.z - Camera.main.transform.position.z;
-        this.initial_position = this.gameObject.transform.position;
         this.layer = this.GetComponent<SpriteRenderer>().sortingOrder;
+        this.player = GameObject.Find("player");
     }
     private void OnMouseDown() {
         // Control object being picked up
         this.drag(true);
         this.GetComponent<BoxCollider2D>().isTrigger = true;
         if(this.in_player) {
-            GameObject.Find("player-trigger")
+            this.player
                 .GetComponent<PlayerController>()
                 .occupied = null;
         }
         this.in_player = false;
         Vector3 mousePos = Input.mousePosition;
         mousePos.z = this.cam_offset;
+        Rigidbody2D rigid_body = this.GetComponent<Rigidbody2D>();
+        rigid_body.freezeRotation = true;
+        rigid_body.isKinematic = true;
+        this.transform.eulerAngles = new Vector3(0, 0, 0);
         this.transform.position = Camera.main.ScreenToWorldPoint(mousePos);
     }
     private void OnMouseUp() {
         // Control object being dropped
         this.drag(false);
-        if(this.sink) {
-            this.in_player = true;
-            PlayerController controller = GameObject.Find("player-trigger")
+        if(this.CheckOnPlayer()) {
+            PlayerController controller = this.player
                 .GetComponent<PlayerController>();
-            if(controller.occupied) {
-                controller.occupied.SendHome();
+            if(controller.occupied && controller.occupied.name != this.name) {
+                controller.occupied.SetFree();
             }
+            this.in_player = true;
             controller.occupied = this;
-            this.transform.position = sink.transform.position;
+            this.transform.position = this.player.transform.Find("center").position;
         }
         else {
-            this.SendHome();
+            this.SetFree();
         }
+    }
+
+    private bool CheckOnPlayer() {
+        // Check whether the disk position is over the player.
+        Transform upperleft = this.player.transform.Find("upperleft");
+        Transform lowerright = this.player.transform.Find("lowerright");
+        if(
+            upperleft.position.x < this.transform.position.x &&
+            upperleft.position.y > this.transform.position.y &&
+            lowerright.position.x > this.transform.position.x &&
+            lowerright.position.y < this.transform.position.y
+        ) return true;
+        return false;
     }
 
     private void Update() {
@@ -49,14 +66,15 @@ public class DiskController : MonoBehaviour {
             // Place the disk where the mouse is.
             Vector3 mousePos = Input.mousePosition;
             mousePos.z = this.cam_offset;
+            this.make_transparent(!this.CheckOnPlayer());
             this.transform.position = Camera.main.ScreenToWorldPoint(mousePos);
         }
     }
 
     private void drag(bool dragging) {
         SpriteRenderer sprite = this.GetComponent<SpriteRenderer>();
-        this.make_transparent(dragging && this.sink == null);
         if(dragging) {
+            this.make_transparent(!this.CheckOnPlayer());
             sprite.sortingOrder = this.layer + 1;
         }
         else {
@@ -66,32 +84,24 @@ public class DiskController : MonoBehaviour {
     }
 
     private void make_transparent(bool transp) {
-        SpriteRenderer sprite = this.GetComponent<SpriteRenderer>();
-        Color white = Color.white;
-        if(transp) {
-            white.a = .6f;
-        }
-        sprite.color = white;
-    }
-
-    private void OnTriggerEnter2D(Collider2D trigger) {
-        if(trigger.CompareTag("Player")) {
-            this.make_transparent(false);
-            this.sink = trigger;
-        }
-    }
-    private void OnTriggerExit2D(Collider2D trigger) {
-        if(trigger.CompareTag("Player") && this.dragged) {
-            this.make_transparent(true);
-            this.sink = null;
+        if(this.is_transparent != transp) {
+            SpriteRenderer sprite = this.GetComponent<SpriteRenderer>();
+            Color white = Color.white;
+            if(transp) {
+                white.a = .6f;
+            }
+            sprite.color = white;
+            this.is_transparent = transp;
         }
     }
 
-    public void SendHome() {
+    public void SetFree() {
         // Move the object to its initial position
         this.GetComponent<BoxCollider2D>().isTrigger = false;
-        this.transform.position = this.initial_position;
+        Rigidbody2D rigid_body = this.GetComponent<Rigidbody2D>();
+        rigid_body.freezeRotation = false;
+        rigid_body.isKinematic = false;
+        this.make_transparent(false);
         this.in_player = false;
-        this.sink = null;
     }
 }
