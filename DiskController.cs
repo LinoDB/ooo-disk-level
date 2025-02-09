@@ -3,7 +3,6 @@ using UnityEngine;
 public class DiskController : MonoBehaviour {
     private const float transparency = .6f;
     private bool dragged = false;
-    private bool in_player = false;
     private bool is_transparent = false;
     private float cam_offset;
     private int layer;
@@ -27,10 +26,9 @@ public class DiskController : MonoBehaviour {
         // Control object being picked up
         Drag(true);
         GetComponent<BoxCollider2D>().isTrigger = true;
-        if(in_player) {
+        if(controller.occupied && controller.occupied.name == name) {
             controller.occupied = null;
         }
-        in_player = false;
 
         Rigidbody2D rigid_body = GetComponent<Rigidbody2D>();
         rigid_body.freezeRotation = true;
@@ -46,10 +44,9 @@ public class DiskController : MonoBehaviour {
         // Control object being dropped
         Drag(false);
         if(CheckOnPlayer()) {
-            if(controller.occupied && controller.occupied.name != name) {
+            if(controller.occupied) {
                 controller.occupied.SetFree();
             }
-            in_player = true;
             controller.occupied = this;
             transform.position = player_center;
         }
@@ -112,6 +109,5 @@ public class DiskController : MonoBehaviour {
         rigid_body.freezeRotation = false;
         rigid_body.isKinematic = false;
         MakeTransparent(false);
-        in_player = false;
     }
 }
