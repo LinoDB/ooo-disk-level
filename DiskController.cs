@@ -27,7 +27,10 @@ public class DiskController : MonoBehaviour {
     private void OnMouseDown() {
         // Control object being picked up
         let_go = false;
-        Drag(true);
+        dragged = true;
+        GetComponent<SpriteRenderer>().sortingOrder = layer + 1;
+        MakeTransparent(CheckOverSlot() == null);
+
         GetComponent<BoxCollider2D>().isTrigger = true;
         Collider collider = CheckOverSlot();
         if(collider) {
@@ -71,13 +74,15 @@ public class DiskController : MonoBehaviour {
     private void LateUpdate() {
         // Use late update to simulate letting go after the last update
         if(let_go) {
-            Drag(false);
+            dragged = false;
+
             Collider collider = CheckOverSlot();
             if(collider) {
                 PlayerSlot slot = collider.GetComponent<PlayerSlot>();
                 if(slot.occupied) {
                     slot.occupied.SetFree();
                 }
+                GetComponent<SpriteRenderer>().sortingOrder = layer - 1;
                 slot.occupied = this;
                 velocity = new Vector2(0, 0);
                 transform.position = collider.transform.position;
@@ -110,34 +115,21 @@ public class DiskController : MonoBehaviour {
         return null;
     }
 
-    private void Drag(bool dragging) {
-        // Toggle dragging state of the object
-        SpriteRenderer sprite = GetComponent<SpriteRenderer>();
-        if(dragging) {
-            MakeTransparent(CheckOverSlot() == null);
-            sprite.sortingOrder = layer + 1;
-        }
-        else {
-            sprite.sortingOrder = layer;
-        }
-        dragged = dragging;
-    }
-
     private void MakeTransparent(bool transp) {
         // Set transparency of the object
         if(is_transparent != transp) {
-            SpriteRenderer sprite = GetComponent<SpriteRenderer>();
             Color white = Color.white;
             if(transp) {
                 white.a = transparency;
             }
-            sprite.color = white;
+            GetComponent<SpriteRenderer>().color = white;
             is_transparent = transp;
         }
     }
 
     public void SetFree() {
         // Activate physics on the object
+        GetComponent<SpriteRenderer>().sortingOrder = layer;
         GetComponent<BoxCollider2D>().isTrigger = false;
         Rigidbody2D rigid_body = GetComponent<Rigidbody2D>();
         rigid_body.freezeRotation = false;
