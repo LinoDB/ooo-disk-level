@@ -1,5 +1,5 @@
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour {
+public class PlayerSlot : MonoBehaviour {
     public DiskController occupied = null;
 }

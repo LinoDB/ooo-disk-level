@@ -1,33 +1,34 @@
 using UnityEngine;
 
 public class DiskController : MonoBehaviour {
+    /*
+        Script for a disk GameObject. The object needs to have a BoxCollider2D
+        and a Rigidbody2D attached. This script interacts with any GameObject
+        that has the PlayerSlot script and a BoxCollider attached, and is placed
+        on layer 1 - TransparentFX.
+    */
     private const float transparency = .6f;
     private bool dragged = false;
     private bool is_transparent = false;
     private float cam_offset;
     private int layer;
-    private PlayerController controller;
-    private Vector3 player_upperleft;
-    private Vector3 player_lowerright;
-    private Vector3 player_center;
 
     private void Start() {
         // Initialize variables
         cam_offset = transform.position.z - Camera.main.transform.position.z;
-        layer = GetComponent<SpriteRenderer>().sortingOrder;
-        GameObject player = GameObject.Find("player");
-        controller = player.GetComponent<PlayerController>();
-        player_upperleft = player.transform.Find("upperleft").position;
-        player_lowerright = player.transform.Find("lowerright").position;
-        player_center = player.transform.Find("center").position;
+        layer = GetComponent<SpriteRenderer>().sortingOrder;        
     }
 
     private void OnMouseDown() {
         // Control object being picked up
         Drag(true);
         GetComponent<BoxCollider2D>().isTrigger = true;
-        if(controller.occupied && controller.occupied.name == name) {
-            controller.occupied = null;
+        Collider collider = CheckOverSlot();
+        if(collider) {
+            PlayerSlot slot = collider.GetComponent<PlayerSlot>();
+            if(slot && slot.occupied && slot.occupied.name == name) {
+                slot.occupied = null;
+            }
         }
 
         Rigidbody2D rigid_body = GetComponent<Rigidbody2D>();
@@ -43,44 +44,45 @@ public class DiskController : MonoBehaviour {
     private void OnMouseUp() {
         // Control object being dropped
         Drag(false);
-        if(CheckOnPlayer()) {
-            if(controller.occupied) {
-                controller.occupied.SetFree();
+        Collider collider = CheckOverSlot();
+        if(collider) {
+            PlayerSlot slot = collider.GetComponent<PlayerSlot>();
+            if(slot.occupied) {
+                slot.occupied.SetFree();
             }
-            controller.occupied = this;
-            transform.position = player_center;
+            slot.occupied = this;
+            transform.position = collider.transform.position;
         }
         else {
             SetFree();
         }
     }
 
-    private bool CheckOnPlayer() {
-        // Check whether the disk position is over the player
-        if(
-            player_upperleft.x < transform.position.x &&
-            player_upperleft.y > transform.position.y &&
-            player_lowerright.x > transform.position.x &&
-            player_lowerright.y < transform.position.y
-        ) return true;
-        return false;
-    }
-
     private void Update() {
+        // Place the disk where the mouse is if the object is being dragged
         if(dragged) {
-            // Place the disk where the mouse is
             Vector3 mousePos = Input.mousePosition;
             mousePos.z = cam_offset;
-            MakeTransparent(!CheckOnPlayer());
+            MakeTransparent(CheckOverSlot() == null);
             transform.position = Camera.main.ScreenToWorldPoint(mousePos);
         }
+    }
+
+    private Collider CheckOverSlot() {
+        // Check if the curser is over a slot
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if(Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, 2)) {
+            if(hit.collider.CompareTag("Slot"))
+			    return hit.collider;
+		}
+        return null;
     }
 
     private void Drag(bool dragging) {
         // Toggle dragging state of the object
         SpriteRenderer sprite = GetComponent<SpriteRenderer>();
         if(dragging) {
-            MakeTransparent(!CheckOnPlayer());
+            MakeTransparent(CheckOverSlot() == null);
             sprite.sortingOrder = layer + 1;
         }
         else {
