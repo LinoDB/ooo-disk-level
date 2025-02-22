@@ -18,6 +18,9 @@ public class DiskController : MonoBehaviour {
     private Vector2 velocity = new Vector2(0, 0);
     private Vector2 last_position = new Vector2(0, 0);
 
+    public GameObject game;
+    public bool game_loaded = false;
+
     private void Start() {
         // Initialize variables
         cam_offset = transform.position.z - Camera.main.transform.position.z;
@@ -37,6 +40,7 @@ public class DiskController : MonoBehaviour {
             PlayerSlot slot = collider.GetComponent<PlayerSlot>();
             if(slot && slot.occupied && slot.occupied.name == name) {
                 slot.occupied = null;
+                UnloadGame();
             }
         }
 
@@ -136,5 +140,16 @@ public class DiskController : MonoBehaviour {
         rigid_body.velocity = velocity;
         rigid_body.isKinematic = false;
         MakeTransparent(false);
+        UnloadGame();
+    }
+
+    public void LoadGame() {
+        game.SetActive(true);
+        game_loaded = true;
+    }
+
+    public void UnloadGame() {
+        game.SetActive(false);
+        game_loaded = false;
     }
 }
