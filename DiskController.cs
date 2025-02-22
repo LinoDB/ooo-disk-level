@@ -146,6 +146,7 @@ public class DiskController : MonoBehaviour {
     public void LoadGame() {
         game.SetActive(true);
         game_loaded = true;
+        game.GetComponent<GameController>().StartGame();
     }
 
     public void UnloadGame() {
