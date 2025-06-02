@@ -1,15 +1,17 @@
 using UnityEngine;
 
 public class Game_1_Pipe : MonoBehaviour {
-    private float speed = 1.0f;
+    private Game_1 parent;
     private Transform top;
 
     private void Start()
     {
         top = transform.GetChild(0);
+        parent = GetComponentInParent<Game_1>();
     }
 
     private void Update () {
+        float speed = parent.pipe_speed;
         Vector3 pos = transform.position;
         pos.x -= Time.deltaTime * speed;
         transform.position = pos;
@@ -21,8 +23,10 @@ public class Game_1_Pipe : MonoBehaviour {
             Camera.main.WorldToScreenPoint(top.position)
         );
         if(Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, 2)) {
+            // see if you can check several colliders since it doesn't always work
             if(hit.collider.CompareTag("Death")) {
 			    Destroy(gameObject);
+                parent.pipe_count += 1;
             }
 		}
     }
