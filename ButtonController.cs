@@ -5,7 +5,7 @@ public class ButtonController : MonoBehaviour {
 
     private void Start() {
         // Initialize variables
-        GameObject player_instance = transform.parent.Find("Slot").gameObject;
+        GameObject player_instance = transform.parent.Find("GameSlot").gameObject;
         if(player_instance.CompareTag("Slot")) {
             player = player_instance.GetComponent<PlayerSlot>();
         }

@@ -11,9 +11,8 @@ public class Game_1_Pipe : MonoBehaviour {
     }
 
     private void Update () {
-        float speed = parent.pipe_speed;
         Vector3 pos = transform.position;
-        pos.x -= Time.deltaTime * speed;
+        pos.x -= Time.deltaTime * parent.pipe_speed;
         transform.position = pos;
         CheckAlive();
     }

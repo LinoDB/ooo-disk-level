@@ -7,8 +7,8 @@ public class DiskController : MonoBehaviour {
         that has the PlayerSlot script and a BoxCollider attached, and is placed
         on layer 1 - TransparentFX.
     */
-    private const float damp = 2;
-    private const float max_speed = 5;
+    private const float damp = 1.5f;
+    private const float max_speed = 30;
     private const float transparency = .6f;
     private bool dragged = false;
     private bool is_transparent = false;

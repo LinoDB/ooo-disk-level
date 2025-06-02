@@ -15,8 +15,8 @@ public class Game_1 : GameController
     public float pipe_speed;
     public int pipe_count;
     private float pipe_speed_step;
-    private float pipe_base_speed = 1f;
-    private float pipe_max_speed = 2.2f;
+    private float pipe_base_speed = 3f;
+    private float pipe_max_speed = 6.6f;
     private float pipe_max_speed_reach = 100f;
     private float pacer;
     private float start_time;
@@ -26,8 +26,8 @@ public class Game_1 : GameController
     private float additional_delay = 0f;
     private float height;
     private float width;
-    private float[] height_range = { 0.125f, 0.42f };
-    private float width_displacement = 0.45f;
+    private float[] height_range = { 0.49f, 2.3f };
+    private float width_displacement = 2f;
     private Game_1_Birb birb_control;
 
     public override void StartGame() {
