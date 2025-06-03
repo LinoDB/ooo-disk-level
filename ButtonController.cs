@@ -19,7 +19,7 @@ public class ButtonController : MonoBehaviour {
     private void OnMouseUpAsButton() {
         if(player.occupied) {
             if(player.occupied.game_loaded) {
-                player.occupied.UnloadGame();
+                player.occupied.game.GetComponent<GameController>().ResetGame();
             }
             else {
                 player.occupied.LoadGame();

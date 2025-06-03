@@ -1,6 +1,5 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 /*
     - Make hardcoded pipe positions instead relative to the display size
@@ -30,21 +29,25 @@ public class Game_1 : GameController
     private float width_displacement = 2f;
     private Game_1_Birb birb_control;
 
+    public void Start() {
+        width = GetComponent<BoxCollider2D>().size.x;
+        height = GetComponent<BoxCollider2D>().size.y;
+    }
+
     public override void StartGame() {
+        base.StartGame();
         pipe_count = 0;
         pipe_speed = pipe_base_speed;
         spawn_rate_pointer = 0;
         start_time = Time.time;
         pacer = start_time - spawn_rates[spawn_rate_pointer];
-        Instantiate(birb, parent: transform);
-        birb_control = GetComponentInChildren<Game_1_Birb>();
+        GameObject birb_p = Instantiate(birb, parent: transform);
+        birb_control = birb_p.GetComponent<Game_1_Birb>();
         pipe_speed_step = (pipe_max_speed - pipe_base_speed) /
             pipe_max_speed_reach * Time.deltaTime;
-        width = GetComponent<BoxCollider2D>().size.x;
-        height = GetComponent<BoxCollider2D>().size.y;
     }
 
-    public override void Update() {
+    public void Update() {
         if(pipe_speed > 0) {
             if(pipe_speed < pipe_max_speed) {
                 pipe_speed += pipe_speed_step;
@@ -96,12 +99,24 @@ public class Game_1 : GameController
         
     }
 
-    public void OnDisable() {
+    public override void EndGame() {
+        UnloadObjects();
+        game_text.SetActive(false);
+        base.EndGame();
+    }
+
+    private void UnloadObjects() {
         // destroy all game objects
         for(int i = 0; i < transform.childCount; i++){
             Destroy(transform.GetChild(i).gameObject);
         }
+        birb_control = null;
+    }
+
+    public override void ResetGame() {
+        UnloadObjects();
         game_text.SetActive(false);
+        StartGame();
     }
 
     public void OnMouseDown() {
