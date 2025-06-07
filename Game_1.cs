@@ -20,31 +20,66 @@ public class Game_1 : GameController
     private float pacer;
     private float start_time;
     private int spawn_rate_pointer;
-    private float[] spawn_rates = { 3f, 2f, 1f, .7f };
+    private float[] spawn_rates = { 3f, 2f, 1f, .75f };
     private float switch_spawn_rate = 15f;
-    private float additional_delay = 0f;
+    private float additional_delay;
     private float height;
     private float width;
     private float[] height_range = { 0.49f, 2.3f };
     private float width_displacement = 2f;
+    private float last_displacement;
+    private bool last_displacement_top = false;
+    private float displacement_cap;
+    private float displacement_cap_per_stage = 0.125f;
     private Game_1_Birb birb_control;
 
-    public void Start() {
+    public override void StartGame() {
         width = GetComponent<BoxCollider2D>().size.x;
         height = GetComponent<BoxCollider2D>().size.y;
-    }
-
-    public override void StartGame() {
         base.StartGame();
         pipe_count = 0;
+        additional_delay = 0f;
+        last_displacement = height_range[0];
         pipe_speed = pipe_base_speed;
         spawn_rate_pointer = 0;
+        CalculateDisplacementCap();
         start_time = Time.time;
         pacer = start_time - spawn_rates[spawn_rate_pointer];
         GameObject birb_p = Instantiate(birb, parent: transform);
         birb_control = birb_p.GetComponent<Game_1_Birb>();
         pipe_speed_step = (pipe_max_speed - pipe_base_speed) /
             pipe_max_speed_reach * Time.deltaTime;
+    }
+
+    private void CalculateDisplacementCap() {
+        displacement_cap =
+            (
+                height_range[0] +
+                (1 - ((spawn_rate_pointer + 1) * displacement_cap_per_stage)) *
+                (height_range[1] - height_range[0])
+            ) * height;
+            Debug.Log("Displacement cap: " + displacement_cap);
+    }
+
+    private float GetDisplacement(bool top) {
+        // something is still wrong, debug with better logs
+        float displacement = Random.Range(
+            height_range[0] * height, height_range[1] * height
+        );
+        if(
+            last_displacement_top != top &&
+            last_displacement < displacement_cap &&
+            displacement < displacement_cap
+        ) {
+            if(top)
+                Debug.Log("Displacement capped from " + displacement + " to " + displacement_cap + " (top)");
+            else
+                Debug.Log("Displacement capped from " + displacement + " to " + displacement_cap + " (bot)");
+            displacement = displacement_cap;
+        }
+        last_displacement_top = top;
+        last_displacement = displacement;
+        return displacement;
     }
 
     public void Update() {
@@ -55,6 +90,7 @@ public class Game_1 : GameController
             if(spawn_rate_pointer < spawn_rates.Length - 1) {
                 if(Time.time > start_time + switch_spawn_rate) {
                     spawn_rate_pointer += 1;
+                    CalculateDisplacementCap();
                     start_time = Time.time;
                 }
             }
@@ -66,10 +102,10 @@ public class Game_1 : GameController
                 Vector3 pos = transform.position;
                 pos.x += width_displacement * width;
                 if(Random.Range(0, 3) == 1){
-                    top_pipe(pos);
+                    top_pipe(pos, GetDisplacement(true));
                 }
                 else {
-                    bottom_pipe(pos);
+                    bottom_pipe(pos, GetDisplacement(false));
                 }
                 pacer = Time.time;
                 additional_delay = Random.Range(
@@ -79,19 +115,15 @@ public class Game_1 : GameController
         }
     }
 
-    private void bottom_pipe(Vector3 pos) {
+    private void bottom_pipe(Vector3 pos, float displacement) {
         Quaternion rot = new Quaternion(0, 0, 0, 1);
-        pos.y -= Random.Range(
-            height_range[0] * height, height_range[1] * height
-        );
+        pos.y -= displacement;
         Instantiate(pipe, pos, rot, transform);
     }
 
-    private void top_pipe(Vector3 pos) {
+    private void top_pipe(Vector3 pos, float displacement) {
         Quaternion rot = new Quaternion(0, 0, 180, 1);
-        pos.y += Random.Range(
-            height_range[0] * height, height_range[1] * height
-        );
+        pos.y += displacement;
         Instantiate(pipe, pos, rot, transform);
     }
 
@@ -107,15 +139,14 @@ public class Game_1 : GameController
 
     private void UnloadObjects() {
         // destroy all game objects
+        birb_control = null;
         for(int i = 0; i < transform.childCount; i++){
             Destroy(transform.GetChild(i).gameObject);
         }
-        birb_control = null;
     }
 
     public override void ResetGame() {
-        UnloadObjects();
-        game_text.SetActive(false);
+        EndGame();
         StartGame();
     }
 
