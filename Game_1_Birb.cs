@@ -20,7 +20,7 @@ public class Game_1_Birb : MonoBehaviour {
         }
     }
 
-    public void Update() {
+    public void LateUpdate() {
         if(active) {
             speed -= gravity * Time.deltaTime;
             Vector3 v = transform.position;
