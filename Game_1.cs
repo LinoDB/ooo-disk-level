@@ -31,6 +31,7 @@ public class Game_1 : GameController
     private bool last_displacement_top = false;
     private float displacement_cap;
     private float displacement_cap_per_stage = 0.125f;
+    private float[] pipe_gap_width = { 0.1f, 1f };
     private Game_1_Birb birb_control;
 
     public override void StartGame() {
@@ -52,29 +53,23 @@ public class Game_1 : GameController
     }
 
     private void CalculateDisplacementCap() {
-        displacement_cap =
-            (
-                height_range[0] +
-                (1 - ((spawn_rate_pointer + 1) * displacement_cap_per_stage)) *
-                (height_range[1] - height_range[0])
-            ) * height;
-            Debug.Log("Displacement cap: " + displacement_cap);
+        displacement_cap = (
+            height_range[0] +
+            (1 - ((spawn_rate_pointer + 1) * displacement_cap_per_stage)) *
+            (height_range[1] - height_range[0])
+        ) * height;
     }
 
-    private float GetDisplacement(bool top) {
+    private float GetDisplacement(bool top, float cap = 0f) {
         // something is still wrong, debug with better logs
         float displacement = Random.Range(
-            height_range[0] * height, height_range[1] * height
+            height_range[0] * height + cap, height_range[1] * height
         );
         if(
             last_displacement_top != top &&
             last_displacement < displacement_cap &&
             displacement < displacement_cap
         ) {
-            if(top)
-                Debug.Log("Displacement capped from " + displacement + " to " + displacement_cap + " (top)");
-            else
-                Debug.Log("Displacement capped from " + displacement + " to " + displacement_cap + " (bot)");
             displacement = displacement_cap;
         }
         last_displacement_top = top;
@@ -101,11 +96,15 @@ public class Game_1 : GameController
             ) {
                 Vector3 pos = transform.position;
                 pos.x += width_displacement * width;
-                if(Random.Range(0, 3) == 1){
+                int flip = Random.Range(0, 6);
+                if(flip < 2){
                     top_pipe(pos, GetDisplacement(true));
                 }
-                else {
+                else if(flip > 2) {
                     bottom_pipe(pos, GetDisplacement(false));
+                }
+                else {
+                    dual_pipe(pos);
                 }
                 pacer = Time.time;
                 additional_delay = Random.Range(
@@ -127,8 +126,19 @@ public class Game_1 : GameController
         Instantiate(pipe, pos, rot, transform);
     }
 
-    private void dual_pipe() {
-        
+    private void dual_pipe(Vector3 pos) {
+        float cap = Random.Range(
+            pipe_gap_width[0] * height, pipe_gap_width[1] * height
+        );
+        float bottom_displacement = GetDisplacement(false, cap);
+        bottom_pipe(pos, bottom_displacement);
+        top_pipe(
+            pos,
+            (
+                height_range[1] * height - bottom_displacement +
+                height_range[0] * height + cap
+            )
+        );
     }
 
     public override void EndGame() {
@@ -143,11 +153,6 @@ public class Game_1 : GameController
         for(int i = 0; i < transform.childCount; i++){
             Destroy(transform.GetChild(i).gameObject);
         }
-    }
-
-    public override void ResetGame() {
-        EndGame();
-        StartGame();
     }
 
     public void OnMouseDown() {
