@@ -30,7 +30,7 @@ public class Game_1 : GameController
     private float last_displacement;
     private bool last_displacement_top = false;
     private float displacement_cap;
-    private float displacement_cap_per_stage = 0.125f;
+    private float displacement_cap_per_stage = 0.15f;
     private float[] pipe_gap_width = { 0.1f, 1f };
     private Game_1_Birb birb_control;
 
