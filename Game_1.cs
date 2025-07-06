@@ -97,11 +97,17 @@ public class Game_1 : GameController
                 Vector3 pos = transform.position;
                 pos.x += width_displacement * width;
                 int flip = Random.Range(0, 6);
-                if(flip < 2){
-                    top_pipe(pos, GetDisplacement(true));
+                if(flip < 3){
+                    if(last_displacement_top)
+                        bottom_pipe(pos, GetDisplacement(false));
+                    else
+                        top_pipe(pos, GetDisplacement(true));
                 }
-                else if(flip > 2) {
-                    bottom_pipe(pos, GetDisplacement(false));
+                else if(flip < 5) {
+                    if(last_displacement_top)
+                        top_pipe(pos, GetDisplacement(true));
+                    else
+                        bottom_pipe(pos, GetDisplacement(false));
                 }
                 else {
                     dual_pipe(pos);
@@ -130,15 +136,28 @@ public class Game_1 : GameController
         float cap = Random.Range(
             pipe_gap_width[0] * height, pipe_gap_width[1] * height
         );
-        float bottom_displacement = GetDisplacement(false, cap);
-        bottom_pipe(pos, bottom_displacement);
-        top_pipe(
-            pos,
-            (
-                height_range[1] * height - bottom_displacement +
-                height_range[0] * height + cap
-            )
-        );
+        if(last_displacement_top) {
+            float bottom_displacement = GetDisplacement(false, cap);
+            bottom_pipe(pos, bottom_displacement);
+            top_pipe(
+                pos,
+                (
+                    height_range[1] * height - bottom_displacement +
+                    height_range[0] * height + cap
+                )
+            );
+        }
+        else {
+            float top_displacement = GetDisplacement(true, cap);
+            top_pipe(pos, top_displacement);
+            bottom_pipe(
+                pos,
+                (
+                    height_range[1] * height - top_displacement +
+                    height_range[0] * height + cap
+                )
+            );
+        }        
     }
 
     public override void EndGame() {
