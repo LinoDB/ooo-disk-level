@@ -20,6 +20,7 @@ public class DiskController : MonoBehaviour {
 
     public GameObject game;
     public bool game_loaded = false;
+    public bool odd_one;
 
     private void Start() {
         // Initialize variables
@@ -63,6 +64,7 @@ public class DiskController : MonoBehaviour {
 
     private void Update() {
         // Place the disk where the mouse is if the object is being dragged
+        CheckEndTrigger();
         if(dragged) {
             Vector3 mousePos = Input.mousePosition;
             mousePos.z = cam_offset;
@@ -117,6 +119,17 @@ public class DiskController : MonoBehaviour {
 			    return hit.collider;
 		}
         return null;
+    }
+
+    private void CheckEndTrigger() {
+        Ray ray = Camera.main.ScreenPointToRay(
+            Camera.main.WorldToScreenPoint(transform.position)
+        );
+        if(Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, 2)) {
+            if(hit.collider.CompareTag("End_Trigger")) {
+                Debug.Log($"Selected the odd one out: {odd_one}");
+            }
+		}
     }
 
     private void MakeTransparent(bool transp) {
