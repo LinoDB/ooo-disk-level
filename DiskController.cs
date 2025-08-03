@@ -90,6 +90,31 @@ public class DiskController : MonoBehaviour {
                 }
                 GetComponent<SpriteRenderer>().sortingOrder = layer - 1;
                 slot.occupied = this;
+                GameObject rack = GameObject.Find("Disk_Rack");
+                bool right_order = true;
+                bool odd_in = false;
+                bool all_in = true;
+                foreach(Transform s in rack.transform) {
+                    PlayerSlot s_script = s.GetComponent<PlayerSlot>();
+                    if(!s_script.occupied) {
+                        all_in = false;
+                        break;
+                    }
+                    else {
+                        if(s_script.occupied.odd_one) {
+                            odd_in = true;
+                        }
+                        if(s_script.occupied.game != s_script.correct_game) {
+                            right_order = false;
+                        }
+                    }
+                }
+                if(all_in && odd_in) {
+                    ResetScene();
+                }
+                if(all_in && right_order) {
+                    Debug.Log("You won!");
+                }
                 velocity = new Vector2(0, 0);
                 transform.position = collider.transform.position;
             }
@@ -127,9 +152,15 @@ public class DiskController : MonoBehaviour {
         );
         if(Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, 2)) {
             if(hit.collider.CompareTag("End_Trigger")) {
-                Debug.Log($"Selected the odd one out: {odd_one}");
+                ResetScene();
             }
 		}
+    }
+
+    private void ResetScene() {
+        UnityEngine.SceneManagement.SceneManager.LoadScene(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+        );
     }
 
     private void MakeTransparent(bool transp) {
