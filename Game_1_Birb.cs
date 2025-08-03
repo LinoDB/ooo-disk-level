@@ -3,8 +3,8 @@ using UnityEngine;
 public class Game_1_Birb : MonoBehaviour {
     private float speed = 0f;
     private float speed_cap = 14f;
-    private float up_boost = 6f;
-    private float gravity = 18f;
+    private float up_boost = 8.5f;
+    private float gravity = 24f;
     private bool active = false;
     private Game_1 parent;
 

@@ -99,7 +99,7 @@ public class Game_1 : GameController
                 Vector3 pos = transform.position;
                 pos.x += width_displacement * width;
                 int flip = Random.Range(0, 6);
-                if(flip < 3){
+                if(flip < 4){
                     if(last_displacement_top)
                         bottom_pipe(pos, GetDisplacement(false));
                     else
