@@ -13,6 +13,7 @@ public class Game_1 : GameController
     public GameObject game_text;
     public float pipe_speed;
     public int pipe_count;
+    private bool wait_max = false;
     private float pipe_speed_step;
     private float pipe_base_speed = 3f;
     private float pipe_max_speed = 6.6f;
@@ -31,7 +32,7 @@ public class Game_1 : GameController
     private bool last_displacement_top = false;
     private float displacement_cap;
     private float displacement_cap_per_stage = 0.15f;
-    private float[] pipe_gap_width = { 0.1f, 1f };
+    private float[] pipe_gap_width = { 0.25f, 1.25f };
     private Game_1_Birb birb_control;
 
     public override void StartGame() {
@@ -71,6 +72,7 @@ public class Game_1 : GameController
             displacement < displacement_cap
         ) {
             displacement = displacement_cap;
+            wait_max = true;
         }
         last_displacement_top = top;
         last_displacement = displacement;
@@ -113,9 +115,15 @@ public class Game_1 : GameController
                     dual_pipe(pos);
                 }
                 pacer = Time.time;
-                additional_delay = Random.Range(
-                    0, 0.5f * spawn_rates[spawn_rate_pointer]
-                );
+                if(wait_max) {
+                    wait_max = false;
+                    additional_delay = 0.5f * spawn_rates[spawn_rate_pointer];
+                }
+                else {
+                    additional_delay = Random.Range(
+                        0, 0.5f * spawn_rates[spawn_rate_pointer]
+                    );
+                }
             }
         }
     }
